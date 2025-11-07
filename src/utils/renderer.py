@@ -80,7 +80,7 @@ class PygameFrontend:
             int(self.params.map_height_width[1]),
         )
 
-        self.CELL_SIZE = 40  # pixels per map unit
+        self.CELL_SIZE = 80  # pixels per map unit
 
         self.bricks_texture = pygame.image.load("src/assets/brick.png")
         self.enemy_texture = pygame.image.load("src/assets/moving-enemy.png")
@@ -226,7 +226,7 @@ class PygameFrontend:
     def draw(self):
         self.screen.fill(WHITE)
 
-        # self.draw_path()
+        # self._draw_path()
 
         self._draw_kinematic_obstacles()
         self._draw_static_obstacles()

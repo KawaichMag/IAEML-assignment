@@ -55,6 +55,7 @@ class BaseEnvState(equinox.Module):
     # Positional vector of the goal
     goal_pos: chex.Array
     # Positional vector of agent
+    agent_velocity: chex.Array
     agent_pos: chex.Array
     # Directional vector of agent
     agent_forward_dir: chex.Array
