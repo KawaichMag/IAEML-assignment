@@ -11,7 +11,7 @@ env_params, init_state = BaseEnv.init_params(
     max_steps=1000,
     discretization_scale=1,
     path_length=100,
-    fps=3,
+    fps=60,
     perception_radius=5.0,
     num_ray_sensors=32,
 )

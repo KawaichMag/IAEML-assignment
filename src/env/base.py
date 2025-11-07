@@ -1,12 +1,11 @@
-import jax
-from jax import numpy as jnp
-import equinox
-import chex
-
 from functools import partial
-from typing import Tuple, Dict, Any
+from typing import Any, Dict, Tuple
 
+import chex
+import equinox
+import jax
 import numpy as np
+from jax import numpy as jnp
 
 from env.tasks import BaseTaskSampler
 from utils import utils
@@ -94,7 +93,6 @@ class BaseEnvObservation(equinox.Module):
 
 
 class BaseEnv:
-
     # abstract
     def init_params(
         key: chex.PRNGKey,
@@ -107,7 +105,6 @@ class BaseEnv:
         fov: float = FOV,
         fps: float = FPS,
     ) -> Tuple[BaseEnvParams, BaseEnvState]:
-
         if discretization_scale != 1:
             raise Exception("discretization_scale != 1 is not implemented!")
 
@@ -169,7 +166,6 @@ class BaseEnv:
     def reset(
         key: chex.PRNGKey, env_params: BaseEnvParams, init_state: BaseEnvState | None
     ) -> Tuple[chex.Array, BaseEnvState]:
-
         if init_state is not None:
             state = init_state
         else:
@@ -178,12 +174,13 @@ class BaseEnv:
         return obs, state
 
     # abstract
-    @partial(jax.jit, static_argnames=("env_params",))
+    @partial(jax.jit, static_argnames=("env_params", "dt"))
     def step(
         key: chex.PRNGKey,
         env_state: BaseEnvState,
         action: chex.Scalar | chex.Array,
         env_params: BaseEnvParams,
+        dt: float,
     ) -> Tuple[
         chex.Array, BaseEnvState, chex.Scalar | chex.Array, chex.Array, Dict[Any, Any]
     ]:
@@ -206,8 +203,10 @@ class BaseEnv:
         # NOTE: what I have define above is called sparse reward. You dont have to use a sparse reward
 
         # Move agent
-        new_agent_pos = env_state.agent_pos + action * env_params.step_size
-        kinematic_obstacles = BaseEnv._move_kinematic_obstacles(env_state, env_params)
+        new_agent_pos = env_state.agent_pos + action * dt
+        kinematic_obstacles = BaseEnv._move_kinematic_obstacles(
+            env_state, env_params, dt
+        )
 
         # Increment time
         new_time = env_state.time + 1
@@ -245,7 +244,11 @@ class BaseEnv:
             path_array=path_array,
         )
         obs = BaseEnv.get_observation(new_state, env_params)
-        info = {"time": new_time, "distance_to_path": obs.distance_to_path, "direction_of_path": obs.direction_of_path}
+        info = {
+            "time": new_time,
+            "distance_to_path": obs.distance_to_path,
+            "direction_of_path": obs.direction_of_path,
+        }
         # NOTE: info is used for evaluation
 
         return obs, new_state, reward, done, info
@@ -294,8 +297,8 @@ class BaseEnv:
 
     def _check_collisions(agent_pos, obstacles, circle_radius=RADIUS) -> chex.Array:
         distances = jnp.linalg.norm(agent_pos - obstacles, axis=1)
-        
-        is_colliding = distances < circle_radius - 1e-4 # give some room
+
+        is_colliding = distances < circle_radius - 1e-4  # give some room
         return jnp.any(is_colliding)
 
     def _check_goal(agent_pos, goal_pos, circle_radius=RADIUS) -> chex.Array:
@@ -305,11 +308,13 @@ class BaseEnv:
     # def _check_time(env_state: BaseEnvState, env_params: BaseEnvParams) -> chex.Array:
     #     return env_state.time >= env_params.max_steps_in_episode
 
-    @partial(jax.jit, static_argnames=("env_params",))
-    def _move_kinematic_obstacles(env_state: BaseEnvState, env_params: BaseEnvParams):
+    @partial(jax.jit, static_argnames=("env_params", "dt"))
+    def _move_kinematic_obstacles(
+        env_state: BaseEnvState, env_params: BaseEnvParams, dt: float | None = None
+    ):
         positions = env_state.kinematic_obstacles
         velocities = env_state.kinematic_obst_velocities
-        new_positions = positions + env_params.step_size * velocities
+        new_positions = positions + dt * velocities
 
         new_positions = jax.vmap(lambda x, y: jnp.mod(x, y), in_axes=(0, None))(
             new_positions,

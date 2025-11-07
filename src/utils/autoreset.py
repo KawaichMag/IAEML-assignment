@@ -1,10 +1,10 @@
-import jax
-import chex
-import equinox
-
 from typing import Tuple
 
-from env.base import BaseEnvParams, BaseEnvState, BaseEnv
+import chex
+import equinox
+import jax
+
+from env.base import BaseEnv, BaseEnvParams, BaseEnvState
 
 
 class AutoResetWrapper(equinox.Module):
@@ -16,7 +16,7 @@ class AutoResetWrapper(equinox.Module):
     def reset(
         self,
         key: chex.PRNGKey,
-        *args
+        *args,
         # env_params: BaseEnvParams,
         # init_state: BaseEnvState | None,
     ) -> Tuple[chex.Array, BaseEnvState]:
@@ -31,7 +31,8 @@ class AutoResetWrapper(equinox.Module):
         key: chex.PRNGKey,
         state: BaseEnvState,
         action: chex.Array,
-        *args
+        dt: float,
+        *args,
         # env_params: BaseEnvParams,
     ) -> Tuple[chex.Array, BaseEnvState, chex.Scalar, BaseEnvState, dict]:
         """
@@ -39,7 +40,7 @@ class AutoResetWrapper(equinox.Module):
         But auto-resets if done=True
         """
         obs, new_state, reward, done, info = self.env.step(
-            key, state, action, self.env_params
+            key, state, action, self.env_params, dt
         )
 
         def reset_state(_):
