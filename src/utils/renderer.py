@@ -84,12 +84,22 @@ class PygameFrontend:
 
         self.bricks_texture = pygame.image.load("src/assets/brick.png")
         self.enemy_texture = pygame.image.load("src/assets/moving-enemy.png")
+        coin_texture = pygame.image.load("src/assets/coin.png")
         self.bricks_texture = pygame.transform.scale(
             self.bricks_texture, (self.CELL_SIZE, self.CELL_SIZE)
         )
         self.enemy_texture = pygame.transform.scale(
             self.enemy_texture, (self.CELL_SIZE, self.CELL_SIZE)
         )
+        coin_texture = pygame.transform.scale(
+            coin_texture, (self.CELL_SIZE, self.CELL_SIZE)
+        )
+        coin_cover = pygame.surface.Surface(coin_texture.get_size())
+        coin_cover.fill((255, 255, 255))
+        coin_cover.blit(coin_texture, (0, 0))
+        coin_cover.set_colorkey((255, 255, 255))
+
+        self.coin_texture = coin_cover
 
         self.screen = pygame.display.set_mode((w * self.CELL_SIZE, h * self.CELL_SIZE))
         pygame.display.set_caption("2D Env Renderer")
@@ -217,8 +227,8 @@ class PygameFrontend:
 
     def draw_goal(self):
         y, x = self.goal_pos
-        center_px = (int((x + 0.5) * self.CELL_SIZE), int((y + 0.5) * self.CELL_SIZE))
-        pygame.draw.circle(self.screen, GREEN, center_px, self.GOAL_RADIUS_PX)
+        center_px = (int((x) * self.CELL_SIZE), int((y) * self.CELL_SIZE))
+        self.screen.blit(self.coin_texture, center_px)
 
     def draw_agent(self):
         # Agent itself
