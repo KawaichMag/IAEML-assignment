@@ -9,7 +9,7 @@ from jax import random
 
 from env.base import BaseEnvParams
 from utils import utils
-from utils.autoreset import AutoResetWrapper
+from utils.autoreset import AVAutoResetWrapper
 
 FPS = 60
 
@@ -27,7 +27,7 @@ YELLOW = (200, 200, 50)
 
 @dataclass
 class PygameFrontend:
-    env: AutoResetWrapper
+    env: AVAutoResetWrapper
     params: BaseEnvParams
     init_state: any
     eval_mode: bool = False
@@ -306,7 +306,7 @@ class PygameFrontend:
                 key=self.key,
                 state=self.state,
                 action=action,
-                dt=self.dt,
+                dt=jnp.array(self.dt),
                 # self.params
             )
 

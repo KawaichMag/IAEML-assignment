@@ -11,13 +11,13 @@ from .base import BaseEnv, BaseEnvParams, BaseEnvState
 
 @dataclass
 class AVEnv(BaseEnv):
-    @partial(jax.jit, static_argnames=("env_params", "dt"))
+    @partial(jax.jit, static_argnames=("env_params",))
     def step(
         key: chex.PRNGKey,
         env_state: BaseEnvState,
         action: chex.Scalar | chex.Array,
         env_params: BaseEnvParams,
-        dt: float,
+        dt: jax.typing.ArrayLike,
     ) -> Tuple[
         chex.Array, BaseEnvState, chex.Scalar | chex.Array, chex.Array, Dict[Any, Any]
     ]:
@@ -88,13 +88,13 @@ class AVEnv(BaseEnv):
 
         return obs, new_state, reward, done, info
 
-    @partial(jax.jit, static_argnames=("env_params", "dt"))
+    @partial(jax.jit, static_argnames=("env_params",))
     def _move_kinematic_obstacles(
-        env_state: BaseEnvState, env_params: BaseEnvParams, dt: float
+        env_state: BaseEnvState, env_params: BaseEnvParams, dt: jax.typing.ArrayLike
     ):
         positions = env_state.kinematic_obstacles
         velocities = env_state.kinematic_obst_velocities
-        new_positions = positions + dt * velocities
+        new_positions = positions + velocities * dt
 
         new_positions = jax.vmap(lambda x, y: jnp.mod(x, y), in_axes=(0, None))(
             new_positions,

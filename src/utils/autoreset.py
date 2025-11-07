@@ -4,6 +4,7 @@ import chex
 import equinox
 import jax
 
+from env.autonomous_veh import AVEnv
 from env.base import BaseEnv, BaseEnvParams, BaseEnvState
 
 
@@ -60,7 +61,7 @@ class AutoResetWrapper(equinox.Module):
 
 
 class AVAutoResetWrapper(equinox.Module):
-    env: BaseEnv = equinox.field(static=True)
+    env: AVEnv = equinox.field(static=True)
     env_params: BaseEnvParams = equinox.field(static=True)
     init_state: BaseEnvState = equinox.field(static=True)
 
@@ -83,7 +84,7 @@ class AVAutoResetWrapper(equinox.Module):
         key: chex.PRNGKey,
         state: BaseEnvState,
         action: chex.Array,
-        dt: float,
+        dt: jax.typing.ArrayLike,
         *args,
         # env_params: BaseEnvParams,
     ) -> Tuple[chex.Array, BaseEnvState, chex.Scalar, BaseEnvState, dict]:
