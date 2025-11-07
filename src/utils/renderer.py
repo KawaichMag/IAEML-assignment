@@ -36,7 +36,7 @@ class PygameFrontend:
     info_position: tuple[int, int] = (10, 10)
     info_font_size: int = 15
     info_line_height: int = 25
-    info_color: tuple[int, int, int] = (255, 255, 255)
+    info_color: tuple[int, int, int] = (0, 255, 0)
 
     move_speed: int = 5
 
@@ -285,6 +285,8 @@ class PygameFrontend:
                 dt=jnp.array(self.dt),
                 # self.params
             )
+
+            self.info["fps"] = clock.get_fps()
 
             self.draw()
 
