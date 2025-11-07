@@ -275,8 +275,6 @@ class PygameFrontend:
 
     def run(self):
         clock = pygame.time.Clock()
-        iterations = 0
-        dt_array = []
 
         while self.running:
             for event in pygame.event.get():
@@ -292,25 +290,14 @@ class PygameFrontend:
             else:
                 action = self.handle_keys()
 
-                # if iterations <= self.params.fps:
-                #     self.dt = 1 / self.params.fps
-                #     true_dt = clock.tick(self.params.fps) / 1000
-
                 self.dt = clock.tick(self.params.fps) / 1000
-                # print(self.dt)
-
-            # if iterations > self.params.fps:
-            #     self.dt = statistics.mode(dt_array)
-            #     clock.tick(self.params.fps)
-            # else:
-            #     iterations += 1
-            #     dt_array.append(true_dt)
 
             self.obs, self.state, _, _, self.info = self.env.step(
                 key=self.key,
                 state=self.state,
                 action=action,
-                dt=self.dt,  # self.params
+                dt=self.dt,
+                # self.params
             )
 
             self.draw()

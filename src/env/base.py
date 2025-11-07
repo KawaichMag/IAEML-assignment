@@ -174,13 +174,12 @@ class BaseEnv:
         return obs, state
 
     # abstract
-    @partial(jax.jit, static_argnames=("env_params", "dt"))
+    @partial(jax.jit, static_argnames=("env_params",))
     def step(
         key: chex.PRNGKey,
         env_state: BaseEnvState,
         action: chex.Scalar | chex.Array,
         env_params: BaseEnvParams,
-        dt: float,
     ) -> Tuple[
         chex.Array, BaseEnvState, chex.Scalar | chex.Array, chex.Array, Dict[Any, Any]
     ]:
@@ -203,10 +202,8 @@ class BaseEnv:
         # NOTE: what I have define above is called sparse reward. You dont have to use a sparse reward
 
         # Move agent
-        new_agent_pos = env_state.agent_pos + action * dt
-        kinematic_obstacles = BaseEnv._move_kinematic_obstacles(
-            env_state, env_params, dt
-        )
+        new_agent_pos = env_state.agent_pos + action * env_params.step_size
+        kinematic_obstacles = BaseEnv._move_kinematic_obstacles(env_state, env_params)
 
         # Increment time
         new_time = env_state.time + 1
@@ -308,13 +305,11 @@ class BaseEnv:
     # def _check_time(env_state: BaseEnvState, env_params: BaseEnvParams) -> chex.Array:
     #     return env_state.time >= env_params.max_steps_in_episode
 
-    @partial(jax.jit, static_argnames=("env_params", "dt"))
-    def _move_kinematic_obstacles(
-        env_state: BaseEnvState, env_params: BaseEnvParams, dt: float | None = None
-    ):
+    @partial(jax.jit, static_argnames=("env_params",))
+    def _move_kinematic_obstacles(env_state: BaseEnvState, env_params: BaseEnvParams):
         positions = env_state.kinematic_obstacles
         velocities = env_state.kinematic_obst_velocities
-        new_positions = positions + dt * velocities
+        new_positions = positions + env_params.step_size * velocities
 
         new_positions = jax.vmap(lambda x, y: jnp.mod(x, y), in_axes=(0, None))(
             new_positions,

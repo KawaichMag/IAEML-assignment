@@ -1,11 +1,11 @@
 import jax
 
-from env.base import BaseEnv
-from utils.autoreset import AutoResetWrapper
+from env.autonomous_veh import AVEnv
+from utils.autoreset import AVAutoResetWrapper
 from utils.renderer import PygameFrontend
 
 key = jax.random.PRNGKey(0)
-env_params, init_state = BaseEnv.init_params(
+env_params, init_state = AVEnv.init_params(
     key=key,
     map_id=1,
     max_steps=1000,
@@ -16,7 +16,7 @@ env_params, init_state = BaseEnv.init_params(
     num_ray_sensors=32,
 )
 
-env = AutoResetWrapper(BaseEnv, env_params, init_state)
+env = AVAutoResetWrapper(AVEnv, env_params, init_state)
 
 # TODO: test parallel envs
 
