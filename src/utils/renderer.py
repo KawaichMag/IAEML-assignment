@@ -123,29 +123,6 @@ class PygameFrontend:
         )
         self.rotate_to_map_vmap = jax.vmap(rotate_to_map_f, in_axes=(0))
 
-    def draw_square_with_striped_circle(
-        self, center_px, square_side_px, circle_radius_px, square_color, num_stripes=6
-    ):
-        # Draw filled square (one cell)
-
-        pygame.draw.rect(
-            self.screen,
-            square_color,
-            (
-                center_px[0] - square_side_px // 2,
-                center_px[1] - square_side_px // 2,
-                square_side_px,
-                square_side_px,
-            ),
-        )
-        # Draw stripes inside circle
-        for i in range(-num_stripes, num_stripes + 1):
-            y_offset = i * circle_radius_px / num_stripes
-            half_width = math.sqrt(max(circle_radius_px**2 - y_offset**2, 0))
-            start_pos = (int(center_px[0] - half_width), int(center_px[1] + y_offset))
-            end_pos = (int(center_px[0] + half_width), int(center_px[1] + y_offset))
-            pygame.draw.line(self.screen, BLACK, start_pos, end_pos, 1)
-
     def draw_path(self) -> None:
         """
         Draws a path over the map in blue
@@ -173,20 +150,19 @@ class PygameFrontend:
         screen_width, screen_height = self.screen.get_size()
         ray_surf = pygame.Surface((screen_width, screen_height), pygame.SRCALPHA)
 
-        agent_px = (
-            int((self.agent_pos[1] + 0.5) * self.CELL_SIZE),
-            int((self.agent_pos[0] + 0.5) * self.CELL_SIZE),
-        )
+        def get_cord(x):
+            return (x + 0.5) * self.CELL_SIZE
 
-        rays = map(
-            lambda x: (
-                int(agent_px[0] + x[1] * self.CELL_SIZE),
-                int(agent_px[1] + x[0] * self.CELL_SIZE),
-            ),
-            self.rays,
-        )
+        agent_px = jax.vmap(get_cord, 0)(self.agent_pos).astype(int)[::-1]
 
-        for ray in rays:
+        def get_ray(x, agent_px):
+            return agent_px + x * self.CELL_SIZE
+
+        reversed_rays = jnp.flip(self.rays, axis=1)
+
+        test_rays = jax.vmap(get_ray, (1, 0), 1)(reversed_rays, agent_px).astype(int)
+
+        for ray in test_rays:
             pygame.draw.line(ray_surf, (255, 0, 0, self.alpha), agent_px, ray, 2)
 
         self.screen.blit(ray_surf, (0, 0))
