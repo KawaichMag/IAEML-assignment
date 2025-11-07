@@ -13,7 +13,7 @@ env_params, init_state = AVEnv.init_params(
     path_length=100,
     fps=60,
     perception_radius=5.0,
-    num_ray_sensors=300,
+    num_ray_sensors=32,
 )
 
 env = AVAutoResetWrapper(AVEnv, env_params, init_state)

@@ -123,7 +123,7 @@ class PygameFrontend:
         )
         self.rotate_to_map_vmap = jax.vmap(rotate_to_map_f, in_axes=(0))
 
-    def draw_path(self) -> None:
+    def _draw_path(self) -> None:
         """
         Draws a path over the map in blue
         """
@@ -142,7 +142,7 @@ class PygameFrontend:
         for start, end in zip(pixels[:-1], pixels[1:]):
             pygame.draw.line(self.screen, BLUE, start, end, 3)
 
-    def draw_rays_transparent(self):
+    def _draw_rays_transparent(self):
         """
         Draw transparent red rays from the agent's position.
         """
@@ -168,7 +168,7 @@ class PygameFrontend:
 
         self.screen.blit(ray_surf, (0, 0))
 
-    def draw_info(self):
+    def _draw_info(self):
         """
         Draws a dictionary of info on the screen.
         """
@@ -184,7 +184,7 @@ class PygameFrontend:
             self.screen.blit(text_surf, (x, y))
             y += self.info_line_height
 
-    def draw_kinematic_obstacles(self):
+    def _draw_kinematic_obstacles(self):
         for pos in self.kin_obst_map:
             y, x = pos
             center_px = (
@@ -193,7 +193,7 @@ class PygameFrontend:
             )
             self.screen.blit(self.enemy_texture, center_px)
 
-    def draw_static_obstacles(self):
+    def _draw_static_obstacles(self):
         for pos in self.static_obst_map:
             y, x = pos
             center_px = (
@@ -202,12 +202,12 @@ class PygameFrontend:
             )
             self.screen.blit(self.bricks_texture, center_px)
 
-    def draw_goal(self):
+    def _draw_goal(self):
         y, x = self.goal_pos
         center_px = (int((x) * self.CELL_SIZE), int((y) * self.CELL_SIZE))
         self.screen.blit(self.coin_texture, center_px)
 
-    def draw_agent(self):
+    def _draw_agent(self):
         # Agent itself
         y, x = self.agent_pos
         center_px = (int((x + 0.5) * self.CELL_SIZE), int((y + 0.5) * self.CELL_SIZE))
@@ -228,15 +228,15 @@ class PygameFrontend:
 
         # self.draw_path()
 
-        self.draw_kinematic_obstacles()
-        self.draw_static_obstacles()
+        self._draw_kinematic_obstacles()
+        self._draw_static_obstacles()
 
-        self.draw_rays_transparent()
+        self._draw_rays_transparent()
 
-        self.draw_goal()
-        self.draw_agent()
+        self._draw_goal()
+        self._draw_agent()
 
-        self.draw_info()
+        self._draw_info()
 
         pygame.display.flip()
 
@@ -271,12 +271,11 @@ class PygameFrontend:
             if self.eval_mode and self.agent_fn is not None:
                 action = self.agent_fn(self.state)
 
-                self.dt = 1
+                self.dt = 1 / self.params.fps
                 clock.tick(self.params.fps)
 
             else:
                 action = self.handle_keys()
-
                 self.dt = clock.tick(self.params.fps) / 1000
 
             self.obs, self.state, _, _, self.info = self.env.step(
