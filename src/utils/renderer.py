@@ -150,19 +150,20 @@ class PygameFrontend:
         screen_width, screen_height = self.screen.get_size()
         ray_surf = pygame.Surface((screen_width, screen_height), pygame.SRCALPHA)
 
-        def get_cord(x):
-            return (x + 0.5) * self.CELL_SIZE
+        agent_px = (
+            int((self.agent_pos[1] + 0.5) * self.CELL_SIZE),
+            int((self.agent_pos[0] + 0.5) * self.CELL_SIZE),
+        )
 
-        agent_px = jax.vmap(get_cord, 0)(self.agent_pos).astype(int)[::-1]
+        rays = map(
+            lambda x: (
+                int(agent_px[0] + x[1] * self.CELL_SIZE),
+                int(agent_px[1] + x[0] * self.CELL_SIZE),
+            ),
+            self.rays,
+        )
 
-        def get_ray(x, agent_px):
-            return agent_px + x * self.CELL_SIZE
-
-        reversed_rays = jnp.flip(self.rays, axis=1)
-
-        test_rays = jax.vmap(get_ray, (1, 0), 1)(reversed_rays, agent_px).astype(int)
-
-        for ray in test_rays:
+        for ray in rays:
             pygame.draw.line(ray_surf, (255, 0, 0, self.alpha), agent_px, ray, 2)
 
         self.screen.blit(ray_surf, (0, 0))
